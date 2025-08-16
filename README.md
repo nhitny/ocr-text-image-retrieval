@@ -1,9 +1,4 @@
-Dưới đây là bản cập nhật `README.md` hoàn chỉnh của bạn, đã **thêm phần dẫn link dữ liệu lưu trên Google Drive**:
-
----
-
-````markdown
-# 📘 OCR Text Image Retrieval - Hướng dẫn Cài đặt & Chạy hệ thống
+# 📘 OCR Text Image Retrieval
 
 Đồ án này là hệ thống tìm kiếm ảnh dựa trên văn bản OCR, hỗ trợ **BM25**, **Semantic** và **Hybrid Search**.
 
