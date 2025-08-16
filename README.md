@@ -1,4 +1,8 @@
+Dưới đây là bản cập nhật `README.md` hoàn chỉnh của bạn, đã **thêm phần dẫn link dữ liệu lưu trên Google Drive**:
 
+---
+
+````markdown
 # 📘 OCR Text Image Retrieval - Hướng dẫn Cài đặt & Chạy hệ thống
 
 Đồ án này là hệ thống tìm kiếm ảnh dựa trên văn bản OCR, hỗ trợ **BM25**, **Semantic** và **Hybrid Search**.
@@ -21,7 +25,7 @@
 ```bash
 conda create -n ocr python=3.10 -y
 conda activate ocr
-```
+````
 
 ### Bước 2: Cài đặt thư viện
 
@@ -85,6 +89,24 @@ python api/api.py
 streamlit run streamlit_app/dashboard.py
 ```
 
+---
+
+## 💾 Dữ liệu
+
+Dữ liệu bao gồm ảnh và file OCR JSON được lưu tại:
+
+🔗 [Google Drive - OCR Dataset](https://drive.google.com/file/d/1XG1hCsPwrJIo3NIwWomYSb3RrIOvl-Ul/view?usp=sharing)
+
+> Hãy tải về và đặt vào thư mục `data/raw/` như sau:
+
+```
+data/
+└── raw/
+    ├── images/
+    └── merged.json
+```
+
+---
 
 ## 📂 Cấu trúc thư mục
 
