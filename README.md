@@ -104,7 +104,6 @@ streamlit run streamlit_app/dashboard.py
 │   ├── start_elasticsearch.sh
 │   ├── build_elasticsearch.sh
 │   ├── build_faiss.sh
-│   └── run_all.sh           ← chạy toàn bộ hệ thống
 ├── data/
 │   ├── raw/images/
 │   └── raw/merged.json
