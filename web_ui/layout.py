@@ -1,4 +1,3 @@
-# web_ui/layout.py
 import os
 import requests
 from flask import Blueprint, request, render_template_string
@@ -35,17 +34,18 @@ HTML = """
       .inline { display:flex; align-items:center; gap:10px; }
       .inline span { min-width: 42px; text-align:right; font-variant-numeric: tabular-nums; }
 
+      .toolbar { display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-bottom:8px; }
+      .btn-secondary { background:#eef3ff; color:#0b63ff; }
+      .btn-secondary:hover { background:#dfe9ff; }
+
       /* Button group cho phương pháp */
       .method-group { display:flex; gap:10px; margin:8px 0 16px; flex-wrap: wrap; }
       .method-btn {
         padding:10px 14px; border-radius:10px; border:1px solid #cfd3d7; background:#fff; cursor:pointer;
-        font-weight:600;
-        color:#0b63ff;   /* chữ xanh trên nền trắng */
+        font-weight:600; color:#0b63ff;
       }
       .method-btn:hover { border-color:#0b63ff; }
-      .method-btn.active {
-        background:#0b63ff; color:#fff; border-color:#0b63ff;
-      }
+      .method-btn.active { background:#0b63ff; color:#fff; border-color:#0b63ff; }
 
       /* Preview ảnh */
       .preview-wrap { display:none; margin-top: 6px; }
@@ -134,6 +134,28 @@ HTML = """
         return true;
       }
 
+      // === NEW: nút Nhập lại (reset)
+      function resetInputs() {
+        const text = document.getElementById('text_input');
+        const file = document.getElementById('image_input');
+        const previewWrap = document.getElementById('preview_wrap');
+        const previewImg  = document.getElementById('preview_img');
+        const previewName = document.getElementById('preview_name');
+
+        // clear text & enable
+        text.value = "";
+        text.disabled = false;
+
+        // clear file & enable
+        if (file) { file.value = ""; file.disabled = false; }
+        if (previewWrap) { previewWrap.style.display = 'none'; }
+        if (previewImg) { previewImg.src = ""; }
+        if (previewName) { previewName.textContent = "Ảnh đã chọn"; }
+
+        // focus vào text để nhập nhanh
+        text.focus();
+      }
+
       window.addEventListener('DOMContentLoaded', bindSliders);
     </script>
   </head>
@@ -146,6 +168,9 @@ HTML = """
     </div>
 
     <div class="card">
+      <div class="toolbar">
+        <button type="button" class="btn-secondary" onclick="resetInputs()">Nhập lại</button>
+      </div>
       <h2 class="title">🔎 Mock OCR Webapp</h2>
 
       <form method="post" enctype="multipart/form-data" onsubmit="return onFormSubmit()">
@@ -170,12 +195,11 @@ HTML = """
 
         <!-- Phương pháp -->
         <label>Phương pháp:</label>
-        <input id="method_input" type="hidden" name="method" value="{{ method or 'Hybrid' }}">
+        <input id="method_input" type="hidden" name="method" value="{{ method or 'BM25' }}">
         <div class="method-group">
-        <button type="button" class="method-btn {% if method=='BM25' %}active{% endif %}"   data-method="BM25"    onclick="onMethodSelect(this)">BM25</button>
-        <button type="button" class="method-btn {% if method=='Semantic' %}active{% endif %}" data-method="Semantic" onclick="onMethodSelect(this)">Semantic</button>
-        <button type="button" class="method-btn {% if method=='Hybrid' %}active{% endif %}" data-method="Hybrid"  onclick="onMethodSelect(this)">Hybrid</button>
-          
+          <button type="button" class="method-btn {% if method=='BM25' %}active{% endif %}"   data-method="BM25"    onclick="onMethodSelect(this)">BM25</button>
+          <button type="button" class="method-btn {% if method=='Semantic' %}active{% endif %}" data-method="Semantic" onclick="onMethodSelect(this)">Semantic</button>
+          <button type="button" class="method-btn {% if method=='Hybrid' %}active{% endif %}"   data-method="Hybrid"  onclick="onMethodSelect(this)">Hybrid</button>
         </div>
 
         <!-- Top K -->
@@ -248,6 +272,7 @@ def home():
     except Exception:
         alpha = 0.5
 
+    # Mặc định cho phép chọn cả hai ở lần render tiếp theo
     file_locked = False
     text_locked = False
 
@@ -257,14 +282,13 @@ def home():
         if method == "Hybrid":
             data["alpha"] = str(alpha)
 
+        # Ưu tiên text; nếu không có text thì dùng ảnh
         if text and text.strip():
             data["text"] = text.strip()
-            file_locked = True
         else:
             img = request.files.get("image")
             if img and img.filename:
                 files["image"] = (img.filename, img.stream, img.mimetype or "application/octet-stream")
-                text_locked = True
             else:
                 flash_msg = "Vui lòng nhập text hoặc chọn ảnh."
 
@@ -276,6 +300,7 @@ def home():
             except Exception as e:
                 flash_msg = f"Lỗi gọi API: {e}"
 
+    # Sau mỗi lần submit, luôn trả về giao diện KHÔNG bị khóa input
     return render_template_string(
         HTML,
         hits=hits,
