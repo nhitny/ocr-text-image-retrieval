@@ -1,6 +1,6 @@
 # 📘 OCR Text Image Retrieval
 
-Đồ án này là hệ thống tìm kiếm ảnh dựa trên văn bản OCR, hỗ trợ **BM25**, **Semantic** và **Hybrid Search**.
+Đồ án này là hệ thống tìm kiếm ảnh và text bằng **BM25**, **Semantic** và **Hybrid Search**.
 
 ---
 
@@ -104,6 +104,10 @@ app.run(host="0.0.0.0", port=8889, debug=True)
 ```
 
 ---
+
+## 🖼️ Giao diện Web UI
+
+![OCR UI](ui.png)
 
 ## 💾 Dữ liệu
 
