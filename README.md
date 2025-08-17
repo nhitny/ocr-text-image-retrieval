@@ -8,27 +8,27 @@
 
 * Python 3.10+
 * Conda
-* `tmux` (để chạy nền Elasticsearch / API)
+* `tmux` (để chạy nền Elasticsearch / API / Web UI)
 * Linux hoặc WSL2 (Ubuntu)
 
 ---
 
 ## 🚀 Cài đặt & chạy từng bước
 
-### Bước 1: Tạo & kích hoạt môi trường Conda
+### 🔹 Bước 1: Tạo & kích hoạt môi trường Conda
 
 ```bash
 conda create -n ocr python=3.10 -y
 conda activate ocr
-````
+```
 
-### Bước 2: Cài đặt thư viện
+### 🔹 Bước 2: Cài đặt thư viện
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Bước 3: Cài Elasticsearch 8.13.4
+### 🔹 Bước 3: Cài Elasticsearch 8.13.4
 
 ```bash
 mkdir elasticsearch-dev
@@ -39,60 +39,79 @@ rm elasticsearch-8.13.4-linux-x86_64.tar.gz
 cd ..
 ```
 
-### Bước 4: Chạy Elasticsearch
+---
+
+## ▶️ Quy trình chạy hệ thống
+
+### 1️⃣ Chạy Elasticsearch (bắt buộc, luôn chạy nền)
 
 ```bash
-tmux new -s ocr
-chmod +x scripts/start_elasticsearch.sh
-bash scripts/start_elasticsearch.sh
+tmux new -s es
+bash scripts/run_elasticsearch.sh
 ```
 
-> ⚠ Giữ tmux session này đang mở để Elasticsearch hoạt động.
+> Elasticsearch chạy ở `http://localhost:9200`
 
-### Bước 5: Build BM25
+---
+
+### 2️⃣ Build chỉ mục (chỉ chạy **lần đầu** hoặc khi thay đổi dataset)
 
 ```bash
-chmod +x scripts/build_elasticsearch.sh
-bash scripts/build_elasticsearch.sh
+bash scripts/build_elasticsearch.sh   # Tạo chỉ mục BM25
+bash scripts/build_faiss.sh           # Tạo chỉ mục FAISS
 ```
 
-Test:
+Test Elasticsearch:
 
 ```bash
 curl 'http://localhost:9200/ocr_bm25/_search?q=text_bm25=công+văn&pretty'
 ```
 
-### Bước 6: Build FAISS
+---
 
-```bash
-chmod +x scripts/build_faiss.sh
-bash scripts/build_faiss.sh
-```
-
-### Bước 7: Chạy API
+### 3️⃣ Chạy API backend
 
 ```bash
 tmux new -s api
-python api/api.py
+bash scripts/run_api.sh
 ```
 
-> Mặc định ở: [http://localhost:8880](http://localhost:8880)
+> API chạy ở: [http://localhost:8880](http://localhost:8880)
 
-### Bước 8: Chạy giao diện
+Ví dụ gọi API:
 
 ```bash
-streamlit run streamlit_app/dashboard.py
+curl "http://localhost:8880/search/bm25?query=công+văn&top_k=3"
+curl "http://localhost:8880/search/semantic?query=CREATION&top_k=3"
+curl "http://localhost:8880/search/hybrid?query=cải+cách&top_k=5&alpha=0.5"
+```
+
+---
+
+### 4️⃣ Chạy Web UI (Flask giao diện)
+
+```bash
+tmux new -s web
+python -m web_ui.layout
+```
+
+> Web UI chạy ở: [http://127.0.0.1:8889](http://127.0.0.1:8889)
+
+Muốn mở cho máy khác trong LAN truy cập → sửa trong `web_ui/layout.py`:
+
+```python
+app.run(host="0.0.0.0", port=8889, debug=True)
 ```
 
 ---
 
 ## 💾 Dữ liệu
 
-Dữ liệu bao gồm ảnh và file OCR JSON được lưu tại:
+Dataset gồm ảnh + OCR JSON:
 
 🔗 [Google Drive - OCR Dataset](https://drive.google.com/file/d/1XG1hCsPwrJIo3NIwWomYSb3RrIOvl-Ul/view?usp=sharing)
 
-> Hãy tải về và đặt vào thư mục `data/raw/` như sau:
+Giải nén và đặt vào:
 
 ```
 data/
@@ -115,10 +134,13 @@ data/
 │   ├── bm25.py
 │   ├── semantic.py
 │   └── hybrid.py
+├── web_ui/
+│   └── layout.py         # Flask giao diện
 ├── streamlit_app/
-│   └── dashboard.py
+│   └── dashboard.py      # Dashboard demo (streamlit)
 ├── scripts/
-│   ├── start_elasticsearch.sh
+│   ├── run_elasticsearch.sh
+│   ├── run_api.sh
 │   ├── build_elasticsearch.sh
 │   ├── build_faiss.sh
 ├── data/
@@ -131,27 +153,25 @@ data/
 
 ## 🧠 Giới thiệu Elasticsearch và FAISS
 
-### Elasticsearch
+### 🔹 Elasticsearch
 
 * Dùng cho **tìm kiếm từ khóa** (BM25).
 * Hiệu quả cao với từ chính xác: tên riêng, mã số, địa danh,...
-* Dữ liệu được lưu dưới dạng chỉ mục trong `ocr_bm25`.
+* Chỉ mục lưu trong `ocr_bm25`.
 
-### FAISS
+### 🔹 FAISS
 
 * Dùng cho **tìm kiếm ngữ nghĩa**.
-* Ánh xạ nội dung OCR sang vector nhúng bằng mô hình embedding.
-* Tìm ảnh có văn bản gần nghĩa với truy vấn, không cần trùng từ.
+* Ánh xạ OCR → embedding vector.
+* Truy vấn không cần khớp từ chính xác.
 
-### Hybrid Search
+### 🔹 Hybrid Search
 
-* Kết hợp điểm BM25 và điểm cosine similarity từ FAISS:
+Kết hợp điểm BM25 và FAISS:
 
-  ```python
-  hybrid_score = alpha * bm25_score + (1 - alpha) * semantic_score
-  ```
-
-* Giúp tăng độ chính xác trong các truy vấn phức tạp.
+```python
+hybrid_score = alpha * bm25_score + (1 - alpha) * semantic_score
+```
 
 ---
 
@@ -162,4 +182,5 @@ curl "http://localhost:8880/search/bm25?query=công+văn&top_k=3"
 curl "http://localhost:8880/search/semantic?query=CREATION&top_k=3"
 curl "http://localhost:8880/search/hybrid?query=cải+cách&top_k=5&alpha=0.5"
 ```
+
 

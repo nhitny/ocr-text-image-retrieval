@@ -5,7 +5,7 @@ import torch
 from sentence_transformers import SentenceTransformer
 
 # Cấu hình thiết bị (ưu tiên GPU nếu có)
-DEVICE = torch.device("cuda:5" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Tên mô hình encode
 MODEL_NAME = "keepitreal/vietnamese-sbert"
