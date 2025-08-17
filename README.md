@@ -92,7 +92,7 @@ curl "http://localhost:8880/search/hybrid?query=cải+cách&top_k=5&alpha=0.5"
 
 ```bash
 tmux new -s web
-python -m web_ui.layout
+python -m web_ui.app
 ```
 
 > Web UI chạy ở: [http://127.0.0.1:8889](http://127.0.0.1:8889)
